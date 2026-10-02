@@ -1,0 +1,12 @@
+package Nathanael.expense_tracker.repository;
+
+import Nathanael.expense_tracker.model.Account;
+import Nathanael.expense_tracker.model.User;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.List;
+
+public interface AccountRepository extends JpaRepository<Account, Long> {
+
+    List<Account> findByUser(User user);
+}
