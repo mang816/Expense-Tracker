@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Expense Tracker</title>
+
+    <link rel="stylesheet" href="/style.css">
+
+</head>
+
+<body>
+
+<div class="app-shell">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+
+        <div class="sidebar-header">
+            <span class="sidebar-logo">💰</span>
+            <span class="sidebar-title">Finance Tracker</span>
+        </div>
+
+        <div class="top-bar">
+            <button type="button" id="themeToggle" class="theme-toggle">🌙 Dark Mode</button>
+        </div>
+
+        <nav class="sidebar-nav">
+            <button type="button" class="nav-item active" data-page="accounts">
+                <span class="nav-icon">🏛️</span> Accounts
+            </button>
+            <button type="button" class="nav-item" data-page="income">
+                <span class="nav-icon">⬇️</span> Income
+            </button>
+            <button type="button" class="nav-item" data-page="expenses">
+                <span class="nav-icon">⬆️</span> Expenses
+            </button>
+            <button type="button" class="nav-item" data-page="transfers">
+                <span class="nav-icon">🔁</span> Transfers
+            </button>
+            <button type="button" class="nav-item" data-page="bills">
+                <span class="nav-icon">🔄</span> Bills &amp; Subscriptions
+            </button>
+            <button type="button" class="nav-item" data-page="monthly">
+                <span class="nav-icon">📊</span> Monthly Overview
+            </button>
+        </nav>
+
+        <div class="sidebar-footer">
+            <form th:action="@{/logout}" method="post">
+                <button type="submit" class="logout-btn">🚪 Log Out</button>
+            </form>
+        </div>
+
+    </aside>
+
+    <!-- Main content -->
+    <main class="main-content">
+
+        <h1>My Expense Tracker</h1>
+
+
+        <!-- ACCOUNTS PAGE -->
+        <section class="page active" id="page-accounts">
+
+            <!-- Dashboard -->
+            <div class="dashboard">
+
+                <div class="total-card">
+                    <h2>Total Income</h2>
+                    <div class="total-amount">
+                        ₦<span th:text="${#numbers.formatDecimal(totalIncome, 1, 'COMMA', 2, 'POINT')}">0.00</span>
+                    </div>
+                </div>
+
+                <div class="total-card">
+                    <h2>Total Expenses</h2>
+                    <div class="total-amount">
+                        ₦<span th:text="${#numbers.formatDecimal(total, 1, 'COMMA', 2, 'POINT')}">0.00</span>
+                    </div>
+                </div>
+
+                <div class="total-card">
+                    <h2>Net Balance</h2>
+                    <div class="total-amount">
+                        ₦<span th:text="${#numbers.formatDecimal(totalIncome - total, 1, 'COMMA', 2, 'POINT')}">0.00</span>
+                    </div>
+                </div>
+
+            </div>
+
+
+            <!-- Accounts -->
+            <div class="section-card">
+
+                <h2>Accounts</h2>
+
+                <form th:action="@{/accounts}" method="post" class="goal-form">
+
+                    <input type="text" name="name" placeholder="Account name e.g. Debit Card" required>
+
+                    <select name="type">
+                        <option value="Bank Account">Bank Account</option>
+                        <option value="Cash">Cash</option>
+                        <option value="Digital Wallet">Digital Wallet</option>
+                        <option value="Credit Union">Credit Union</option>
+                    </select>
+
+                    <input type="number" name="balance" placeholder="Current balance" step="0.01" required>
+
+                    <button type="submit">Add Account</button>
+
+                </form>
+
+                <div class="empty-state" th:if="${accounts == null or accounts.isEmpty()}">
+                    <p>No accounts yet. Add your bank, cash, or wallet balances above.</p>
+                </div>
+
+                <div class="accounts-grid" th:if="${accounts != null and !accounts.isEmpty()}">
+
+                    <div class="account-card" th:each="acc : ${accounts}">
+
+                        <div class="account-card-header">
+                            <span th:text="${acc.name}">Account name</span>
+                            <a th:href="@{/accounts/{id}/delete(id=${acc.id})}" class="delete" onclick="return confirm('Delete this account?');">✕</a>
+                        </div>
+
+                        <span class="account-type-badge" th:text="${acc.type}">Type</span>
+
+                        <div class="account-balance">
+                            <span th:text="'Current Balance: ₦' + ${#numbers.formatDecimal(acc.balance, 1, 'COMMA', 2, 'POINT')}">
+                                ₦0.00
+                            </span>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- Category Summary -->
+            <div class="section-card">
+
+                <h2>Category Summary</h2>
+
+                <ul class="plain-list">
+                    <li th:each="entry : ${categoryTotals}">
+                        <span th:text="${categoryIcons.get(entry.key)} + ' ' + ${entry.key}">🛒 Category</span>
+                        <span th:text="${'₦' + #numbers.formatDecimal(entry.value, 1, 'COMMA', 2, 'POINT')}">0.00</span>
+                    </li>
+                </ul>
+
+                <canvas id="categoryChart" width="400" height="300"></canvas>
+
+            </div>
+
+
+            <!-- Budgeting -->
+            <div class="section-card">
+
+                <h2>Budgeting</h2>
+
+                <form th:action="@{/budget}" method="post" class="filter-form">
+
+                    <select name="category">
+                        <option value="Food & Groceries">🛒 Food &amp; Groceries</option>
+                        <option value="Utilities">🔧 Utilities</option>
+                        <option value="Shopping">🛍️ Shopping</option>
+                        <option value="Housing">🏠 Housing</option>
+                        <option value="Transportation">🚌 Transportation</option>
+                        <option value="Healthcare">🏥 Healthcare</option>
+                        <option value="Entertainment">🎬 Entertainment</option>
+                        <option value="Career Development">📈 Career Development</option>
+                        <option value="Travel">✈️ Travel</option>
+                        <option value="Charity & Gifts">🎁 Charity &amp; Gifts</option>
+                        <option value="Subscription">🔁 Subscription</option>
+                        <option value="Personal Care">💇 Personal Care</option>
+                        <option value="Pet">🐾 Pet</option>
+                        <option value="Household Supplies">🧴 Household Supplies</option>
+                        <option value="Other">📦 Other</option>
+                    </select>
+
+                    <input type="number" name="limitAmount" placeholder="Limit e.g. 50000" step="0.01" min="0" required>
+
+                    <button type="submit">Set Budget</button>
+
+                </form>
+
+                <div class="budget-grid" th:if="${budgetProgress != null and !budgetProgress.isEmpty()}">
+
+                    <div th:each="entry : ${budgetProgress}" class="budget-card-item">
+
+                        <div class="budget-card-header">
+                            <span class="budget-icon" th:text="${categoryIcons.get(entry.key)}">🛒</span>
+                            <span class="budget-category-name" th:text="${entry.key}">Category</span>
+                        </div>
+
+                        <div class="budget-remaining"
+                             th:classappend="${entry.value[2] >= 100} ? 'over-budget-text'"
+                             th:text="${'₦' + #numbers.formatDecimal((entry.value[1] - entry.value[0]) > 0 ? (entry.value[1] - entry.value[0]) : 0, 1, 'COMMA', 2, 'POINT')} + ' remaining out of your ₦' + ${#numbers.formatDecimal(entry.value[1], 1, 'COMMA', 2, 'POINT')} + ' budget'">
+                            remaining
+                        </div>
+
+                        <div class="budget-percent" th:text="${#numbers.formatDecimal(entry.value[2], 1, 0)} + '%'">0%</div>
+
+                        <div class="budget-bar-track">
+                            <div class="budget-bar-fill"
+                                 th:style="'width: ' + ${entry.value[2]} + '%;'"
+                                 th:classappend="${entry.value[2] >= 100} ? 'over-budget'">
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- Savings Goals -->
+            <div class="section-card">
+
+                <h2>Savings Goals</h2>
+
+                <form th:action="@{/goals}" method="post" class="goal-form">
+
+                    <input type="text" name="name" placeholder="Goal name e.g. Emergency Fund" required>
+                    <input type="number" name="targetAmount" placeholder="Target e.g. 200000" step="0.01" min="0" required>
+                    <input type="date" name="targetDate">
+
+                    <select name="category">
+                        <option value="">No specific category</option>
+                        <option value="Food & Groceries">🛒 Food &amp; Groceries</option>
+                        <option value="Utilities">🔧 Utilities</option>
+                        <option value="Shopping">🛍️ Shopping</option>
+                        <option value="Housing">🏠 Housing</option>
+                        <option value="Transportation">🚌 Transportation</option>
+                        <option value="Healthcare">🏥 Healthcare</option>
+                        <option value="Entertainment">🎬 Entertainment</option>
+                        <option value="Career Development">📈 Career Development</option>
+                        <option value="Travel">✈️ Travel</option>
+                        <option value="Charity & Gifts">🎁 Charity &amp; Gifts</option>
+                        <option value="Subscription">🔁 Subscription</option>
+                        <option value="Personal Care">💇 Personal Care</option>
+                        <option value="Pet">🐾 Pet</option>
+                        <option value="Household Supplies">🧴 Household Supplies</option>
+                        <option value="Other">📦 Other</option>
+                    </select>
+
+                    <button type="submit">Add Goal</button>
+
+                </form>
+
+                <div th:if="${savingsGoals != null and !savingsGoals.isEmpty()}">
+
+                    <div th:each="goal : ${savingsGoals}" class="goal-row">
+
+                        <div class="goal-label">
+                            <span th:text="${goal.name}">Goal name</span>
+                            <span th:text="${'₦' + #numbers.formatDecimal(goal.currentAmount, 1, 'COMMA', 2, 'POINT')} + ' / ₦' + ${#numbers.formatDecimal(goal.targetAmount, 1, 'COMMA', 2, 'POINT')}">
+                                saved / target
+                            </span>
+                        </div>
+
+                        <div class="budget-bar-track">
+                            <div class="budget-bar-fill"
+                                 th:style="'width: ' + ${goal.targetAmount > 0 ? (goal.currentAmount / goal.targetAmount * 100 > 100 ? 100 : goal.currentAmount / goal.targetAmount * 100) : 0} + '%;'">
+                            </div>
+                        </div>
+
+                        <div class="goal-meta">
+                            <span th:if="${goal.targetDate != null}" th:text="'Target: ' + ${goal.targetDate}">Target date</span>
+                            <span th:if="${goal.category != null}" th:text="${categoryIcons.get(goal.category)} + ' ' + ${goal.category}">Category</span>
+                        </div>
+
+                        <form th:action="@{/goals/{id}/contribute(id=${goal.id})}" method="post" class="goal-contribute-form">
+                            <input type="number" name="amount" placeholder="Add amount" step="0.01" min="0" required>
+                            <button type="submit">Add</button>
+                            <a th:href="@{/goals/{id}/delete(id=${goal.id})}" class="delete" onclick="return confirm('Delete this savings goal?');">Delete</a>
+                        </form>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- INCOME PAGE -->
+        <section class="page" id="page-income">
+
+            <div class="section-card">
+
+                <h2>Income</h2>
+
+                <form th:action="@{/income}" method="post" class="goal-form">
+
+                    <input type="text" name="source" placeholder="Source e.g. Salary, Freelance" required>
+                    <input type="number" name="amount" placeholder="Amount" step="0.01" min="0" required>
+                    <input type="date" name="date" th:value="${today}" required>
+
+                    <button type="submit">Add Income</button>
+
+                </form>
+
+                <div class="empty-state" th:if="${incomeList == null or incomeList.isEmpty()}">
+                    <p>No income recorded yet. Add your salary or other income sources above.</p>
+                </div>
+
+                <div class="expense" th:each="income : ${incomeList}">
+
+                    <div class="expense-top">
+                        <strong class="expense-description" th:text="${income.source}">Source</strong>
+                        <strong class="expense-amount">
+                            ₦<span th:text="${#numbers.formatDecimal(income.amount, 1, 'COMMA', 2, 'POINT')}">0.00</span>
+                        </strong>
+                    </div>
+
+                    <div class="expense-bottom">
+                        <span class="expense-meta" th:text="${income.date}">Date</span>
+                        <span class="expense-actions">
+                            <a class="delete" th:href="@{/income/{id}/delete(id=${income.id})}" onclick="return confirm('Delete this income entry?');">Delete</a>
+                        </span>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- EXPENSES PAGE -->
+        <section class="page" id="page-expenses">
+
+            <!-- Add Expense -->
+            <div class="section-card">
+
+                <h2>Add Expense</h2>
+
+                <form th:action="@{/add}" method="post" th:object="${expense}" enctype="multipart/form-data">
+
+                    <div class="form-group">
+                        <label>Description</label>
+                        <input type="text" name="description" th:value="${expense != null} ? ${expense.description} : ''" placeholder="Example: Groceries">
+                        <p class="error" th:if="${expense != null}" th:errors="*{description}"></p>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Amount</label>
+                        <input type="number" name="amount" th:value="${expense != null} ? ${expense.amount} : ''" placeholder="Example: 15000" step="0.01">
+                        <p class="error" th:if="${expense != null}" th:errors="*{amount}"></p>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Category</label>
+                        <select name="category">
+                            <option value="Food & Groceries">🛒 Food &amp; Groceries</option>
+                            <option value="Utilities">🔧 Utilities</option>
+                            <option value="Shopping">🛍️ Shopping</option>
+                            <option value="Housing">🏠 Housing</option>
+                            <option value="Transportation">🚌 Transportation</option>
+                            <option value="Healthcare">🏥 Healthcare</option>
+                            <option value="Entertainment">🎬 Entertainment</option>
+                            <option value="Career Development">📈 Career Development</option>
+                            <option value="Travel">✈️ Travel</option>
+                            <option value="Charity & Gifts">🎁 Charity &amp; Gifts</option>
+                            <option value="Subscription">🔁 Subscription</option>
+                            <option value="Personal Care">💇 Personal Care</option>
+                            <option value="Pet">🐾 Pet</option>
+                            <option value="Household Supplies">🧴 Household Supplies</option>
+                            <option value="Other">📦 Other</option>
+                        </select>
+                        <p class="error" th:if="${expense != null}" th:errors="*{category}"></p>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Date</label>
+                        <input type="date" name="date" th:value="${expense != null} ? ${expense.date} : ${today}">
+                        <p class="error" th:if="${expense != null}" th:errors="*{date}"></p>
+                    </div>
+
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" name="recurring" value="true" id="recurringCheckbox">
+                            Repeat this expense
+                        </label>
+                        <select name="recurrenceFrequency" id="recurrenceFrequency" disabled>
+                            <option value="WEEKLY">Weekly</option>
+                            <option value="MONTHLY">Monthly</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Receipt (optional)</label>
+                        <input type="file" name="receipt" accept="image/*">
+                    </div>
+
+                    <button type="submit">Add Expense</button>
+
+                </form>
+
+            </div>
+
+
+            <!-- Search and Filter -->
+            <div class="section-card">
+
+                <form action="/" method="get" class="filter-form">
+
+                    <input type="text" name="search" th:value="${search}" placeholder="Search description...">
+
+                    <select name="category">
+                        <option value="">All Categories</option>
+                        <option value="Food & Groceries" th:selected="${selectedCategory == 'Food & Groceries'}">🛒 Food &amp; Groceries</option>
+                        <option value="Utilities" th:selected="${selectedCategory == 'Utilities'}">🔧 Utilities</option>
+                        <option value="Shopping" th:selected="${selectedCategory == 'Shopping'}">🛍️ Shopping</option>
+                        <option value="Housing" th:selected="${selectedCategory == 'Housing'}">🏠 Housing</option>
+                        <option value="Transportation" th:selected="${selectedCategory == 'Transportation'}">🚌 Transportation</option>
+                        <option value="Healthcare" th:selected="${selectedCategory == 'Healthcare'}">🏥 Healthcare</option>
+                        <option value="Entertainment" th:selected="${selectedCategory == 'Entertainment'}">🎬 Entertainment</option>
+                        <option value="Career Development" th:selected="${selectedCategory == 'Career Development'}">📈 Career Development</option>
+                        <option value="Travel" th:selected="${selectedCategory == 'Travel'}">✈️ Travel</option>
+                        <option value="Charity & Gifts" th:selected="${selectedCategory == 'Charity & Gifts'}">🎁 Charity &amp; Gifts</option>
+                        <option value="Subscription" th:selected="${selectedCategory == 'Subscription'}">🔁 Subscription</option>
+                        <option value="Personal Care" th:selected="${selectedCategory == 'Personal Care'}">💇 Personal Care</option>
+                        <option value="Pet" th:selected="${selectedCategory == 'Pet'}">🐾 Pet</option>
+                        <option value="Household Supplies" th:selected="${selectedCategory == 'Household Supplies'}">🧴 Household Supplies</option>
+                        <option value="Other" th:selected="${selectedCategory == 'Other'}">📦 Other</option>
+                    </select>
+
+                    <button type="submit">Filter</button>
+                    <a href="/" class="clear-filter">Clear</a>
+
+                </form>
+
+            </div>
+
+
+            <!-- Expenses -->
+            <div class="section-card">
+
+                <div class="expenses-header">
+                    <h2>My Expenses</h2>
+                    <div class="export-buttons">
+                        <a href="/export/csv" class="export-btn">⬇ CSV</a>
+                        <a href="/export/pdf" class="export-btn">⬇ PDF</a>
+                    </div>
+                </div>
+
+                <div class="empty-state" th:if="${expenses.isEmpty()}">
+                    <p>No expenses found. Try adding one or adjusting your filters.</p>
+                </div>
+
+                <div class="expense" th:each="expense : ${expenses}">
+
+                    <div class="expense-top">
+
+                        <img th:if="${expense.receiptImage != null}" th:src="@{/receipt/{id}(id=${expense.id})}" class="receipt-thumb" alt="receipt">
+
+                        <strong class="expense-description" th:text="${expense.description}">Description</strong>
+
+                        <strong class="expense-amount">
+                            ₦<span th:text="${#numbers.formatDecimal(expense.amount, 1, 'COMMA', 2, 'POINT')}">0.00</span>
+                        </strong>
+
+                    </div>
+
+                    <div class="expense-bottom">
+
+                        <span class="expense-meta" th:text="${categoryIcons.get(expense.category)} + ' ' + ${expense.category} + ' • ' + ${expense.date}">🛒 Category • Date</span>
+
+                        <span class="expense-actions">
+                            <a th:href="@{/edit/{id}(id=${expense.id})}">Edit</a>
+                            <a class="delete" th:href="@{/delete/{id}(id=${expense.id})}" onclick="return confirm('Are you sure you want to delete this expense?');">Delete</a>
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- TRANSFERS PAGE (placeholder) -->
+        <section class="page" id="page-transfers">
+
+            <div class="section-card">
+                <h2>Transfers</h2>
+                <div class="empty-state">
+                    <p>Transfers between accounts aren't built yet — let me know if you'd like this added.</p>
+                </div>
+            </div>
+
+        </section>
+
+
+        <!-- BILLS & SUBSCRIPTIONS PAGE -->
+        <section class="page" id="page-bills">
+
+            <div class="section-card">
+
+                <h2>Bills &amp; Subscriptions</h2>
+
+                <div class="empty-state" th:if="${#lists.isEmpty(expenses.?[recurring == true])}">
+                    <p>No recurring expenses yet. Check "Repeat this expense" when adding one to see it here.</p>
+                </div>
+
+                <div class="expense" th:each="expense : ${expenses.?[recurring == true]}">
+
+                    <div class="expense-top">
+                        <strong class="expense-description" th:text="${expense.description}">Description</strong>
+                        <strong class="expense-amount">
+                            ₦<span th:text="${#numbers.formatDecimal(expense.amount, 1, 'COMMA', 2, 'POINT')}">0.00</span>
+                        </strong>
+                    </div>
+
+                    <div class="expense-bottom">
+                        <span class="expense-meta" th:text="${categoryIcons.get(expense.category)} + ' ' + ${expense.category} + ' • ' + ${expense.recurrenceFrequency} + ' • next: ' + ${expense.nextDueDate}">🛒 Category • Frequency</span>
+                        <span class="expense-actions">
+                            <a th:href="@{/edit/{id}(id=${expense.id})}">Edit</a>
+                        </span>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- MONTHLY OVERVIEW PAGE -->
+        <section class="page" id="page-monthly">
+
+            <div class="section-card">
+
+                <h2>Monthly Summary</h2>
+
+                <ul class="plain-list">
+                    <li th:each="entry : ${monthlyTotals}">
+                        <span th:text="${entry.key}">Month Year</span>
+                        <span th:text="${'₦' + #numbers.formatDecimal(entry.value, 1, 'COMMA', 2, 'POINT')}">0.00</span>
+                    </li>
+                </ul>
+
+            </div>
+
+            <div class="section-card" th:if="${monthComparison != null and !monthComparison.isEmpty()}">
+
+                <h2>This Month vs Last Month</h2>
+
+                <div th:each="entry : ${monthComparison}" class="comparison-row">
+
+                    <span class="comparison-category" th:text="${categoryIcons.get(entry.key)} + ' ' + ${entry.key}">🛒 Category</span>
+
+                    <span class="comparison-amounts">
+                        <span th:text="'₦' + ${#numbers.formatDecimal(entry.value[0], 1, 'COMMA', 2, 'POINT')}">current</span>
+                        vs
+                        <span th:text="'₦' + ${#numbers.formatDecimal(entry.value[1], 1, 'COMMA', 2, 'POINT')}">previous</span>
+                    </span>
+
+                    <span class="comparison-change"
+                          th:classappend="${entry.value[2] > 0} ? 'increase' : (${entry.value[2] < 0} ? 'decrease' : '')"
+                          th:text="${entry.value[2] > 0 ? '↑ ' : (entry.value[2] < 0 ? '↓ ' : '')} + ${#numbers.formatDecimal(entry.value[2], 1, 0)} + '%'">
+                        0%
+                    </span>
+
+                </div>
+
+            </div>
+
+            <div class="section-card">
+
+                <h2>This Month's Report</h2>
+
+                <p class="report-month" th:text="${currentMonthLabel}">Month Year</p>
+
+                <form th:action="@{/target}" method="post" class="filter-form">
+                    <input type="number" name="targetSurplus" th:value="${targetSurplus}" placeholder="Target surplus e.g. 1000" step="0.01" min="0" required>
+                    <button type="submit">Set Target</button>
+                </form>
+
+                <div class="report-lines">
+
+                    <div class="report-line">
+                        <span>🎯 Target Surplus</span>
+                        <span th:text="'₦' + ${#numbers.formatDecimal(targetSurplus, 1, 'COMMA', 2, 'POINT')}">₦0.00</span>
+                    </div>
+
+                    <div class="report-line">
+                        <span>⊕ Income</span>
+                        <span class="report-positive" th:text="'₦' + ${#numbers.formatDecimal(currentMonthIncomeTotal, 1, 'COMMA', 2, 'POINT')}">₦0.00</span>
+                    </div>
+
+                    <div class="report-line">
+                        <span>⊖ Expenses</span>
+                        <span class="report-negative" th:text="'₦' + ${#numbers.formatDecimal(currentMonthExpenseTotal, 1, 'COMMA', 2, 'POINT')}">₦0.00</span>
+                    </div>
+
+                    <div class="report-line">
+                        <span>➜ Net Surplus</span>
+                        <span th:text="'₦' + ${#numbers.formatDecimal(netSurplus, 1, 'COMMA', 2, 'POINT')}">₦0.00</span>
+                    </div>
+
+                </div>
+
+                <div class="report-status"
+                     th:classappend="${netSurplus >= targetSurplus} ? 'report-status-good' : 'report-status-bad'"
+                     th:text="${netSurplus >= targetSurplus} ? 'Target Achieved 🎉' : ('Target Missed by ₦' + ${#numbers.formatDecimal(targetGap, 1, 'COMMA', 2, 'POINT')})">
+                    Target status
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+</div>
+
+
+<!-- Chart.js library -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+
+<script th:inline="javascript">
+
+    const categoryLabels = /*[[${categoryTotals.keySet()}]]*/ [];
+    const categoryValues = /*[[${categoryTotals.values()}]]*/ [];
+
+    const ctx = document.getElementById('categoryChart');
+
+    if (categoryLabels.length > 0) {
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: categoryLabels,
+                datasets: [{
+                    label: 'Spending by Category',
+                    data: categoryValues,
+                    backgroundColor: [
+                        '#2563eb',
+                        '#dc2626',
+                        '#16a34a',
+                        '#f59e0b',
+                        '#9333ea',
+                        '#6b7280',
+                        '#0891b2',
+                        '#db2777',
+                        '#65a30d',
+                        '#ea580c',
+                        '#7c3aed',
+                        '#0d9488',
+                        '#ca8a04',
+                        '#e11d48',
+                        '#475569'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+    }
+
+</script>
+
+<script>
+    document.getElementById('recurringCheckbox').addEventListener('change', function () {
+        document.getElementById('recurrenceFrequency').disabled = !this.checked;
+    });
+</script>
+
+<script>
+    const navItems = document.querySelectorAll('.nav-item');
+    const pages = document.querySelectorAll('.page');
+
+    navItems.forEach(function (item) {
+        item.addEventListener('click', function () {
+            const targetPage = item.getAttribute('data-page');
+
+            navItems.forEach(function (nav) { nav.classList.remove('active'); });
+            pages.forEach(function (page) { page.classList.remove('active'); });
+
+            item.classList.add('active');
+            document.getElementById('page-' + targetPage).classList.add('active');
+        });
+    });
+</script>
+
+<script>
+    const themeToggleBtn = document.getElementById('themeToggle');
+    const savedTheme = localStorage.getItem('theme');
+
+    if (savedTheme === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        themeToggleBtn.textContent = '☀️ Light Mode';
+    }
+
+    themeToggleBtn.addEventListener('click', function () {
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+
+        if (isDark) {
+            document.documentElement.removeAttribute('data-theme');
+            localStorage.setItem('theme', 'light');
+            themeToggleBtn.textContent = '🌙 Dark Mode';
+        } else {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            localStorage.setItem('theme', 'dark');
+            themeToggleBtn.textContent = '☀️ Light Mode';
+        }
+    });
+</script>
+
+</body>
+
+</html>

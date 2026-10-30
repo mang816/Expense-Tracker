@@ -1,0 +1,1 @@
+ALTER TABLE expense MODIFY receipt_image MEDIUMBLOB;

@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Edit Expense</title>
+
+    <link rel="stylesheet" href="/style.css">
+
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="form-card">
+
+        <h1>Edit Expense</h1>
+
+        <form
+                th:action="@{/update/{id}(id=${expense.id})}"
+                method="post"
+        >
+
+            <div class="form-group">
+
+                <label>Description</label>
+
+                <input
+                        type="text"
+                        name="description"
+                        th:value="${expense.description}"
+                        required
+                >
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label>Amount</label>
+
+                <input
+                        type="number"
+                        name="amount"
+                        th:value="${expense.amount}"
+                        step="0.01"
+                        min="0"
+                        required
+                >
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label>Category</label>
+
+                <select name="category">
+
+                    <option
+                            value="Food"
+                            th:selected="${expense.category == 'Food'}">
+                        Food
+                    </option>
+
+                    <option
+                            value="Transport"
+                            th:selected="${expense.category == 'Transport'}">
+                        Transport
+                    </option>
+
+                    <option
+                            value="Bills"
+                            th:selected="${expense.category == 'Bills'}">
+                        Bills
+                    </option>
+
+                    <option
+                            value="Shopping"
+                            th:selected="${expense.category == 'Shopping'}">
+                        Shopping
+                    </option>
+
+                    <option
+                            value="Entertainment"
+                            th:selected="${expense.category == 'Entertainment'}">
+                        Entertainment
+                    </option>
+
+                    <option
+                            value="Other"
+                            th:selected="${expense.category == 'Other'}">
+                        Other
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label>Date</label>
+
+                <input
+                        type="date"
+                        name="date"
+                        th:value="${expense.date}"
+                        required
+                >
+
+            </div>
+
+
+            <button type="submit">
+                Update Expense
+            </button>
+
+        </form>
+
+
+        <br>
+
+        <a href="/">
+            Cancel
+        </a>
+
+    </div>
+
+</div>
+
+</body>
+
+</html>
