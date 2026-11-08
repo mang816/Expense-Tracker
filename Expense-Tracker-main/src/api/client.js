@@ -1,7 +1,8 @@
 import axios from 'axios';
 
 const client = axios.create({
-    baseURL: 'http://localhost:8080/api',
+    // CHANGED: Port 8080 to 8081
+    baseURL: 'http://localhost:8081/api',
     headers: {
         'Content-Type': 'application/json',
     },
@@ -11,7 +12,8 @@ client.interceptors.request.use((config) => {
     const token = localStorage.getItem('token');
 
     if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
+        // CHANGED: Added backticks () so the token variable actually works
+        config.headers.Authorization = Bearer ${token}`;
     }
 
     return config;

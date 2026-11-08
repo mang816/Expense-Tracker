@@ -1,7 +1,6 @@
 package Nathanael.expense_tracker;
 
 import Nathanael.expense_tracker.config.JwtAuthenticationFilter;
-import jakarta.servlet.DispatcherType; // IMPORTANT: Added for the redirect fix
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -21,7 +20,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import java.util.List;
 
 @Configuration
-public class SecurityConfig { // FIXED: Removed the 'éé' typo that was here
+public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
@@ -52,6 +51,7 @@ public class SecurityConfig { // FIXED: Removed the 'éé' typo that was here
         return source;
     }
 
+    // 1) REST API: stateless, protected by JWT
     @Bean
     @Order(1)
     public SecurityFilterChain apiFilterChain(HttpSecurity http) throws Exception {
@@ -69,35 +69,37 @@ public class SecurityConfig { // FIXED: Removed the 'éé' typo that was here
         return http.build();
     }
 
+    // 2) Swagger documentation: open to everyone
     @Bean
     @Order(2)
     public SecurityFilterChain docsFilterChain(HttpSecurity http) throws Exception {
         http
-                .securityMatcher("/swagger-ui/", "/v3/api-docs/", "/swagger-ui.html")
+                .securityMatcher("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html")
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
 
         return http.build();
     }
 
+    // 3) Thymeleaf web app: session login with a form
     @Bean
     @Order(3)
     public SecurityFilterChain webFilterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(auth -> auth
-                        // FIX: Allow internal forwards and error dispatches to prevent infinite loops
-                        .dispatcherTypeMatchers(DispatcherType.FORWARD, DispatcherType.ERROR).permitAll()
-                        // FIX: Explicitly permit /login, /error, /register, and /style.css
-                        .requestMatchers("/login", "/error", "/register", "/style.css").permitAll()
+                        .requestMatchers("/login", "/register", "/style.css", "/error").permitAll()
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form
                         .loginPage("/login")
+                        .defaultSuccessUrl("/", true)
                         .permitAll()
                 )
                 .logout(logout -> logout
+                        .logoutSuccessUrl("/login?logout")
                         .permitAll()
                 );
+
         return http.build();
     }
 }

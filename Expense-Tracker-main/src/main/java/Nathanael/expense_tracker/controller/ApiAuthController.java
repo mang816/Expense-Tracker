@@ -1,65 +1,44 @@
 package Nathanael.expense_tracker.controller;
 
-import Nathanael.expense_tracker.dto.AuthRequest;
-import Nathanael.expense_tracker.dto.AuthResponse;
+import Nathanael.expense_tracker.exception.UsernameAlreadyExistsException;
 import Nathanael.expense_tracker.model.User;
-import Nathanael.expense_tracker.service.CustomUserDetailsService;
-import Nathanael.expense_tracker.service.JwtService;
 import Nathanael.expense_tracker.service.UserService;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 
-@RestController
-@RequestMapping("/api/auth")
+@Controller
 public class ApiAuthController {
 
     private final UserService userService;
-    private final JwtService jwtService;
-    private final CustomUserDetailsService userDetailsService;
-    private final AuthenticationManager authenticationManager;
 
-    public ApiAuthController(
-            UserService userService,
-            JwtService jwtService,
-            CustomUserDetailsService userDetailsService,
-            AuthenticationManager authenticationManager) {
+    public ApiAuthController(UserService userService) {
         this.userService = userService;
-        this.jwtService = jwtService;
-        this.userDetailsService = userDetailsService;
-        this.authenticationManager = authenticationManager;
+    }
+
+    @GetMapping("/login")
+    public String loginPage() {
+        return "login";
+    }
+
+    @GetMapping("/register")
+    public String registerPage(Model model) {
+        model.addAttribute("user", new User());
+        return "register";
     }
 
     @PostMapping("/register")
-    public AuthResponse register(@RequestBody AuthRequest request) {
-
-        User user = userService.register(request.getUsername(), request.getPassword());
-
-        UserDetails userDetails = userDetailsService.loadUserByUsername(user.getUsername());
-        String token = jwtService.generateToken(userDetails);
-
-        return new AuthResponse(token);
-    }
-
-    @PostMapping("/login")
-    public AuthResponse login(@RequestBody AuthRequest request) {
+    public String registerUser(@ModelAttribute User user, Model model) {
 
         try {
-            authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
-            );
-        } catch (Exception e) {
-            throw new BadCredentialsException("Invalid username or password");
+            userService.register(user.getUsername(), user.getPassword());
+        } catch (UsernameAlreadyExistsException | IllegalArgumentException e) {
+            model.addAttribute("error", e.getMessage());
+            return "register";
         }
 
-        UserDetails userDetails = userDetailsService.loadUserByUsername(request.getUsername());
-        String token = jwtService.generateToken(userDetails);
-
-        return new AuthResponse(token);
+        return "redirect:/login?registered";
     }
 }
