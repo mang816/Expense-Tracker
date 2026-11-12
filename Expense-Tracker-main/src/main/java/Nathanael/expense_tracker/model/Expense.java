@@ -7,6 +7,7 @@ import jakarta.validation.constraints.Positive;
 import java.time.LocalDate;
 
 @Entity
+@Table(name = "expense")
 public class Expense {
 
     @Id
@@ -25,19 +26,24 @@ public class Expense {
     @NotNull(message = "Date is required")
     private LocalDate date;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
     private User user;
 
+    @Column(name = "recurring")
     private boolean recurring;
 
-    private String recurrenceFrequency; // "WEEKLY" or "MONTHLY"
+    @Column(name = "recurrence_frequency")
+    private String recurrenceFrequency;
 
+    @Column(name = "next_due_date")
     private LocalDate nextDueDate;
 
     @Lob
-    @Column(length = 5_000_000)
+    @Column(name = "receipt_image", length = 5_000_000)
     private byte[] receiptImage;
 
+    @Column(name = "receipt_content_type")
     private String receiptContentType;
 
     public Expense() {
@@ -50,86 +56,35 @@ public class Expense {
         this.date = date;
     }
 
-    public Long getId() {
-        return id;
-    }
+    public Long getId() { return id; }
 
-    public String getDescription() {
-        return description;
-    }
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
 
-    public void setDescription(String description) {
-        this.description = description;
-    }
+    public double getAmount() { return amount; }
+    public void setAmount(double amount) { this.amount = amount; }
 
-    public double getAmount() {
-        return amount;
-    }
+    public String getCategory() { return category; }
+    public void setCategory(String category) { this.category = category; }
 
-    public void setAmount(double amount) {
-        this.amount = amount;
-    }
+    public LocalDate getDate() { return date; }
+    public void setDate(LocalDate date) { this.date = date; }
 
-    public String getCategory() {
-        return category;
-    }
+    public User getUser() { return user; }
+    public void setUser(User user) { this.user = user; }
 
-    public void setCategory(String category) {
-        this.category = category;
-    }
-    public LocalDate getDate() {
-        return date;
-    }
+    public boolean isRecurring() { return recurring; }
+    public void setRecurring(boolean recurring) { this.recurring = recurring; }
 
-    public void setDate(LocalDate date) {
-        this.date = date;
-    }
+    public String getRecurrenceFrequency() { return recurrenceFrequency; }
+    public void setRecurrenceFrequency(String recurrenceFrequency) { this.recurrenceFrequency = recurrenceFrequency; }
 
-    public User getUser() {
-        return user;
-    }
+    public LocalDate getNextDueDate() { return nextDueDate; }
+    public void setNextDueDate(LocalDate nextDueDate) { this.nextDueDate = nextDueDate; }
 
-    public void setUser(User user) {
-        this.user = user;
-    }
+    public byte[] getReceiptImage() { return receiptImage; }
+    public void setReceiptImage(byte[] receiptImage) { this.receiptImage = receiptImage; }
 
-    public boolean isRecurring() {
-        return recurring;
-    }
-
-    public void setRecurring(boolean recurring) {
-        this.recurring = recurring;
-    }
-
-    public String getRecurrenceFrequency() {
-        return recurrenceFrequency;
-    }
-
-    public void setRecurrenceFrequency(String recurrenceFrequency) {
-        this.recurrenceFrequency = recurrenceFrequency;
-    }
-
-    public LocalDate getNextDueDate() {
-        return nextDueDate;
-    }
-
-    public void setNextDueDate(LocalDate nextDueDate) {
-        this.nextDueDate = nextDueDate;
-    }
-
-    public byte[] getReceiptImage() {
-        return receiptImage;
-    }
-
-    public void setReceiptImage(byte[] receiptImage) {
-        this.receiptImage = receiptImage;
-    }
-
-    public String getReceiptContentType() {
-        return receiptContentType;
-    }
-
-    public void setReceiptContentType(String receiptContentType) {
-        this.receiptContentType = receiptContentType;
-    }
+    public String getReceiptContentType() { return receiptContentType; }
+    public void setReceiptContentType(String receiptContentType) { this.receiptContentType = receiptContentType; }
 }

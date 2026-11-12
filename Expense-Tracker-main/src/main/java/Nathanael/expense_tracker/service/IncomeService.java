@@ -20,16 +20,19 @@ public class IncomeService {
         return incomeRepository.findByUser(user);
     }
 
-    public void addIncome(Income income) {
-        incomeRepository.save(income);
+    public Income addIncome(Income income) {
+        return incomeRepository.save(income);
     }
 
     public void deleteIncome(Long id, User user) {
-
         Income income = incomeRepository.findById(id).orElse(null);
-
         if (income != null && income.getUser().getId().equals(user.getId())) {
             incomeRepository.deleteById(id);
         }
+    }
+
+    // --- NEW METHOD FOR EDITING ---
+    public Income getIncomeById(Long id) {
+        return incomeRepository.findById(id).orElse(null);
     }
 }

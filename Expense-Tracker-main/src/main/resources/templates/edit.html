@@ -1,140 +1,141 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
-
     <meta charset="UTF-8">
-
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0">
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Edit Expense</title>
-
     <link rel="stylesheet" href="/style.css">
-
 </head>
-
 <body>
+<div class="app-shell">
 
-<div class="container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <span class="sidebar-logo">💰</span>
+            <span class="sidebar-title">Finance Tracker</span>
+        </div>
+        <div class="top-bar">
+            <button type="button" id="themeToggle" class="theme-toggle">🌙 Dark Mode</button>
+        </div>
 
-    <div class="form-card">
+        <nav class="sidebar-nav">
+            <a th:href="@{/(tab='accounts')}" class="nav-item"><span class="nav-icon">🏛️</span> Accounts</a>
+            <a th:href="@{/(tab='income')}" class="nav-item"><span class="nav-icon">⬇️</span> Income</a>
+            <a th:href="@{/(tab='expenses')}" class="nav-item active"><span class="nav-icon">⬆️</span> Expenses</a>
+            <a th:href="@{/(tab='transfers')}" class="nav-item"><span class="nav-icon">🔁</span> Transfers</a>
+            <a th:href="@{/(tab='bills')}" class="nav-item"><span class="nav-icon">🔄</span> Bills &amp; Subscriptions</a>
+            <a th:href="@{/(tab='monthly')}" class="nav-item"><span class="nav-icon">📊</span> Monthly Overview</a>
+        </nav>
 
+        <div class="sidebar-footer">
+            <form th:action="@{/logout}" method="post">
+                <button type="submit" class="logout-btn">🚪 Log Out</button>
+            </form>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
         <h1>Edit Expense</h1>
 
-        <form
-                th:action="@{/update/{id}(id=${expense.id})}"
-                method="post"
-        >
+        <div class="section-card">
+            <form th:action="@{/update/{id}(id=${expense.id})}" method="post" enctype="multipart/form-data">
 
-            <div class="form-group">
+                <div class="form-group">
+                    <label>Description</label>
+                    <input type="text" name="description" th:value="${expense.description}" required>
+                </div>
 
-                <label>Description</label>
+                <div class="form-group">
+                    <label>Amount</label>
+                    <input type="number" name="amount" th:value="${expense.amount}" step="0.01" min="0" required>
+                </div>
 
-                <input
-                        type="text"
-                        name="description"
-                        th:value="${expense.description}"
-                        required
-                >
+                <div class="form-group">
+                    <label>Category</label>
+                    <select name="category">
+                        <option value="Food & Groceries" th:selected="${expense.category == 'Food & Groceries'}">🛒 Food &amp; Groceries</option>
+                        <option value="Utilities" th:selected="${expense.category == 'Utilities'}">🔧 Utilities</option>
+                        <option value="Shopping" th:selected="${expense.category == 'Shopping'}">🛍️ Shopping</option>
+                        <option value="Housing" th:selected="${expense.category == 'Housing'}">🏠 Housing</option>
+                        <option value="Transportation" th:selected="${expense.category == 'Transportation'}">🚌 Transportation</option>
+                        <option value="Healthcare" th:selected="${expense.category == 'Healthcare'}">🏥 Healthcare</option>
+                        <option value="Entertainment" th:selected="${expense.category == 'Entertainment'}">🎬 Entertainment</option>
+                        <option value="Career Development" th:selected="${expense.category == 'Career Development'}">📈 Career Development</option>
+                        <option value="Travel" th:selected="${expense.category == 'Travel'}">✈️ Travel</option>
+                        <option value="Charity & Gifts" th:selected="${expense.category == 'Charity & Gifts'}">🎁 Charity &amp; Gifts</option>
+                        <option value="Subscription" th:selected="${expense.category == 'Subscription'}">🔁 Subscription</option>
+                        <option value="Personal Care" th:selected="${expense.category == 'Personal Care'}">💇 Personal Care</option>
+                        <option value="Pet" th:selected="${expense.category == 'Pet'}">🐾 Pet</option>
+                        <option value="Household Supplies" th:selected="${expense.category == 'Household Supplies'}">🧴 Household Supplies</option>
+                        <option value="Other" th:selected="${expense.category == 'Other'}">📦 Other</option>
+                    </select>
+                </div>
 
-            </div>
+                <div class="form-group">
+                    <label>Date</label>
+                    <input type="date" name="date" th:value="${expense.date}" required>
+                </div>
 
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" name="recurring" value="true" id="recurringCheckbox" th:checked="${expense.recurring}">
+                        Repeat this expense
+                    </label>
+                    <select name="recurrenceFrequency" id="recurrenceFrequency" th:disabled="${!expense.recurring}">
+                        <option value="WEEKLY" th:selected="${expense.recurrenceFrequency == 'WEEKLY'}">Weekly</option>
+                        <option value="MONTHLY" th:selected="${expense.recurrenceFrequency == 'MONTHLY'}">Monthly</option>
+                    </select>
+                </div>
 
-            <div class="form-group">
+                <div class="form-group">
+                    <label>Update Receipt (optional)</label>
+                    <input type="file" name="receipt" accept="image/*">
+                </div>
 
-                <label>Amount</label>
+                <div style="display: flex; gap: 10px; margin-top: 25px;">
+                    <a th:href="@{/(tab='expenses')}" style="text-decoration: none; width: 50%;">
+                        <button type="button" style="background: var(--border-color); color: var(--text-primary); box-shadow: none;">Cancel</button>
+                    </a>
+                    <button type="submit" style="width: 50%;">Update Expense</button>
+                </div>
 
-                <input
-                        type="number"
-                        name="amount"
-                        th:value="${expense.amount}"
-                        step="0.01"
-                        min="0"
-                        required
-                >
-
-            </div>
-
-
-            <div class="form-group">
-
-                <label>Category</label>
-
-                <select name="category">
-
-                    <option
-                            value="Food"
-                            th:selected="${expense.category == 'Food'}">
-                        Food
-                    </option>
-
-                    <option
-                            value="Transport"
-                            th:selected="${expense.category == 'Transport'}">
-                        Transport
-                    </option>
-
-                    <option
-                            value="Bills"
-                            th:selected="${expense.category == 'Bills'}">
-                        Bills
-                    </option>
-
-                    <option
-                            value="Shopping"
-                            th:selected="${expense.category == 'Shopping'}">
-                        Shopping
-                    </option>
-
-                    <option
-                            value="Entertainment"
-                            th:selected="${expense.category == 'Entertainment'}">
-                        Entertainment
-                    </option>
-
-                    <option
-                            value="Other"
-                            th:selected="${expense.category == 'Other'}">
-                        Other
-                    </option>
-
-                </select>
-
-            </div>
-
-
-            <div class="form-group">
-
-                <label>Date</label>
-
-                <input
-                        type="date"
-                        name="date"
-                        th:value="${expense.date}"
-                        required
-                >
-
-            </div>
-
-
-            <button type="submit">
-                Update Expense
-            </button>
-
-        </form>
-
-
-        <br>
-
-        <a href="/">
-            Cancel
-        </a>
-
-    </div>
-
+            </form>
+        </div>
+    </main>
 </div>
 
-</body>
+<script>
+    const themeToggleBtn = document.getElementById('themeToggle');
+    if (themeToggleBtn) {
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            themeToggleBtn.textContent = '☀️ Light Mode';
+        }
+        themeToggleBtn.addEventListener('click', function () {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            if (isDark) {
+                document.documentElement.removeAttribute('data-theme');
+                localStorage.setItem('theme', 'light');
+                themeToggleBtn.textContent = '🌙 Dark Mode';
+            } else {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                localStorage.setItem('theme', 'dark');
+                themeToggleBtn.textContent = '☀️ Light Mode';
+            }
+        });
+    }
 
+    const recurringCheckbox = document.getElementById('recurringCheckbox');
+    const frequencyDropdown = document.getElementById('recurrenceFrequency');
+    if (recurringCheckbox && frequencyDropdown) {
+        recurringCheckbox.addEventListener('change', function () {
+            frequencyDropdown.disabled = !this.checked;
+        });
+    }
+</script>
+
+</body>
 </html>

@@ -20,26 +20,31 @@ public class SavingsGoalService {
         return savingsGoalRepository.findByUser(user);
     }
 
-    public void createGoal(SavingsGoal goal) {
-        savingsGoalRepository.save(goal);
+    public SavingsGoal createGoal(SavingsGoal goal) {
+        return savingsGoalRepository.save(goal);
     }
 
-    public void addContribution(Long goalId, double amount, User user) {
-
-        SavingsGoal goal = savingsGoalRepository.findById(goalId).orElse(null);
-
+    public void addContribution(Long id, double amount, User user) {
+        SavingsGoal goal = savingsGoalRepository.findById(id).orElse(null);
         if (goal != null && goal.getUser().getId().equals(user.getId())) {
             goal.setCurrentAmount(goal.getCurrentAmount() + amount);
             savingsGoalRepository.save(goal);
         }
     }
 
-    public void deleteGoal(Long goalId, User user) {
-
-        SavingsGoal goal = savingsGoalRepository.findById(goalId).orElse(null);
-
+    public void updateGoal(Long id, String name, double targetAmount, User user) {
+        SavingsGoal goal = savingsGoalRepository.findById(id).orElse(null);
         if (goal != null && goal.getUser().getId().equals(user.getId())) {
-            savingsGoalRepository.deleteById(goalId);
+            goal.setName(name);
+            goal.setTargetAmount(targetAmount);
+            savingsGoalRepository.save(goal);
+        }
+    }
+
+    public void deleteGoal(Long id, User user) {
+        SavingsGoal goal = savingsGoalRepository.findById(id).orElse(null);
+        if (goal != null && goal.getUser().getId().equals(user.getId())) {
+            savingsGoalRepository.delete(goal);
         }
     }
 }

@@ -51,7 +51,6 @@ public class SecurityConfig {
         return source;
     }
 
-    // 1) REST API: stateless, protected by JWT
     @Bean
     @Order(1)
     public SecurityFilterChain apiFilterChain(HttpSecurity http) throws Exception {
@@ -69,7 +68,6 @@ public class SecurityConfig {
         return http.build();
     }
 
-    // 2) Swagger documentation: open to everyone
     @Bean
     @Order(2)
     public SecurityFilterChain docsFilterChain(HttpSecurity http) throws Exception {
@@ -81,13 +79,14 @@ public class SecurityConfig {
         return http.build();
     }
 
-    // 3) Thymeleaf web app: session login with a form
     @Bean
     @Order(3)
     public SecurityFilterChain webFilterChain(HttpSecurity http) throws Exception {
         http
+                .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/login", "/register", "/style.css", "/error").permitAll()
+                        // I restored /style.css here so the login page loads correctly
+                        .requestMatchers("/login", "/register", "/style.css", "/error", "/webjars/**", "/images/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form

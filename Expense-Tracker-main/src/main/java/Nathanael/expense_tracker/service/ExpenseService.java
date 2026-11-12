@@ -61,4 +61,8 @@ public class ExpenseService {
 
         return null;
     }
+
+    public List<Expense> getBillsForUser(User user) {
+        return expenseRepository.findByUserAndRecurringTrue(user);
+    }
 }

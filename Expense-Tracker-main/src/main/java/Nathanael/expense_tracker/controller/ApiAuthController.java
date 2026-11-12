@@ -1,3 +1,4 @@
+
 package Nathanael.expense_tracker.controller;
 
 import Nathanael.expense_tracker.exception.UsernameAlreadyExistsException;
@@ -30,11 +31,19 @@ public class ApiAuthController {
     }
 
     @PostMapping("/register")
-    public String registerUser(@ModelAttribute User user, Model model) {
+    public String registerUser(
+            @ModelAttribute("user") User user,
+            Model model) {
 
         try {
-            userService.register(user.getUsername(), user.getPassword());
-        } catch (UsernameAlreadyExistsException | IllegalArgumentException e) {
+            userService.register(
+                    user.getUsername(),
+                    user.getPassword()
+            );
+
+        } catch (UsernameAlreadyExistsException |
+                 IllegalArgumentException e) {
+
             model.addAttribute("error", e.getMessage());
             return "register";
         }
